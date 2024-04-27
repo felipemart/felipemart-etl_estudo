@@ -17,7 +17,8 @@ default_args = {
     dag_id='postgres_to_snowflake',
     default_args=default_args,
     description='Load data incrementally from Postgres to Snowflake',
-    schedule_interval=timedelta(days=1),
+    schedule="@continuous",
+    max_active_runs=1,  
     catchup=False
 )
 def postgres_to_snowflake_etl():
@@ -43,7 +44,7 @@ def postgres_to_snowflake_etl():
                     columns_list_str = ', '.join(columns)
                     placeholders = ', '.join(['%s'] * len(columns))
                     
-                    pg_cursor.execute(f"SELECT {columns_list_str} FROM {table_name} WHERE {primary_key} > {max_id} limit 1000")
+                    pg_cursor.execute(f"SELECT {columns_list_str} FROM {table_name} WHERE {primary_key} > {max_id} limit 100")
                     rows = pg_cursor.fetchall()
                     
                     with SnowflakeHook(snowflake_conn_id='snowflake').get_conn() as sf_conn:
